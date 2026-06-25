@@ -238,74 +238,32 @@ export function ruleAbusoCupons(transactions: Transaction[], users: User[]): Ale
  */
 export function ruleDispositivosCompartilhados(users: User[]): Alert[] {
   const alerts: Alert[] = [];
+  const SKIP = new Set(['', 'unknown', 'fcbbef4d-e46d-4336-8e09-452afb6e68b6']);
   const dispositivoMap = new Map<string, User[]>();
-  const ipMap = new Map<string, User[]>();
 
   for (const user of users) {
-    const devList = dispositivoMap.get(user.dispositivo_id) ?? [];
-    devList.push(user);
-    dispositivoMap.set(user.dispositivo_id, devList);
-
-    const ipList = ipMap.get(user.ip_ultimo_acesso) ?? [];
-    ipList.push(user);
-    ipMap.set(user.ip_ultimo_acesso, ipList);
+    const dev = user.dispositivo_id?.toLowerCase().trim() ?? '';
+    if (SKIP.has(dev)) continue;
+    const list = dispositivoMap.get(dev) ?? [];
+    list.push(user);
+    dispositivoMap.set(dev, list);
   }
 
-  const processedPairs = new Set<string>();
-
-  for (const [, userList] of dispositivoMap.entries()) {
+  for (const [dev, userList] of dispositivoMap.entries()) {
     if (userList.length < 2) continue;
 
-    for (let i = 0; i < userList.length; i++) {
-      for (let j = i + 1; j < userList.length; j++) {
-        const key = [userList[i].id, userList[j].id].sort().join('-');
-        if (processedPairs.has(key)) continue;
-        processedPairs.add(key);
-
-        alerts.push({
-          id: generateAlertId(),
-          usuario_id: userList[i].id,
-          tipo_regra: 'dispositivos-compartilhados',
-          nivel: 'critico',
-          descricao: `Dispositivo ${userList[i].dispositivo_id} compartilhado entre ${userList[i].nome} e ${userList[j].nome}`,
-          data: todayISO(),
-          valores_relevantes: {
-            usuario_1: userList[i].id,
-            usuario_2: userList[j].id,
-            dispositivo_id: userList[i].dispositivo_id,
-          },
-        });
-      }
-    }
+    alerts.push({
+      id: generateAlertId(),
+      usuario_id: userList[0].id,
+      tipo_regra: 'dispositivos-compartilhados',
+      nivel: userList.length > 5 ? 'critico' : 'alto',
+      descricao: `${userList.length} contas compartilhando dispositivo ${dev}`,
+      data: todayISO(),
+      valores_relevantes: { total_contas: userList.length, dispositivo_id: dev },
+    });
   }
 
-  for (const [, userList] of ipMap.entries()) {
-    if (userList.length < 2) continue;
-
-    for (let i = 0; i < userList.length; i++) {
-      for (let j = i + 1; j < userList.length; j++) {
-        const key = [userList[i].id, userList[j].id].sort().join('-');
-        if (processedPairs.has(key)) continue;
-        processedPairs.add(key);
-
-        alerts.push({
-          id: generateAlertId(),
-          usuario_id: userList[i].id,
-          tipo_regra: 'dispositivos-compartilhados',
-          nivel: 'critico',
-          descricao: `IP ${userList[i].ip_ultimo_acesso} compartilhado entre ${userList[i].nome} e ${userList[j].nome}`,
-          data: todayISO(),
-          valores_relevantes: {
-            usuario_1: userList[i].id,
-            usuario_2: userList[j].id,
-            ip: userList[i].ip_ultimo_acesso,
-          },
-        });
-      }
-    }
-  }
-
-  return alerts;
+  return alerts.slice(0, 50);
 }
 
 /**
@@ -368,7 +326,7 @@ export function runAllRules(
     ...ruleAbusoCupons(transactions, users),
     ...ruleDispositivosCompartilhados(users),
     ...ruleAlteracoesCadastrais(users),
-  ];
+  ].slice(0, 500);
 
   const activeAlertCounts = new Map<string, number>();
   for (const alert of allAlerts) {
