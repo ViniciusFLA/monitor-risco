@@ -23,137 +23,6 @@ interface RankingsData {
   top_sacadores: RankingItem[]
 }
 
-const MOCK_STATS: StatsData = {
-  total_usuarios: 12847,
-  total_depositos_hoje: 1458320,
-  total_saques_hoje: 987650,
-  alertas_ativos: 23,
-  alertas_criticos: 5,
-}
-
-const MOCK_ALERTS: AlertData[] = [
-  {
-    id: 1,
-    nivel: "critico",
-    regra: "Saque acima do limite diário de R$ 10.000",
-    usuario: "João Silva",
-    valores: { saque: 50000, limite: 10000 },
-    timestamp: "2026-06-24T10:30:00Z",
-  },
-  {
-    id: 2,
-    nivel: "alto",
-    regra: "Depósito suspeito em conta inativa",
-    usuario: "Maria Santos",
-    valores: { deposito: 75000, saldo: 1200 },
-    timestamp: "2026-06-24T09:45:00Z",
-  },
-  {
-    id: 3,
-    nivel: "medio",
-    regra: "Múltiplas transações em sequência rápida",
-    usuario: "Pedro Costa",
-    valores: { valor: 15000 },
-    timestamp: "2026-06-24T09:30:00Z",
-  },
-  {
-    id: 4,
-    nivel: "baixo",
-    regra: "Alteração de dados cadastrais",
-    usuario: "Ana Oliveira",
-    valores: {},
-    timestamp: "2026-06-24T09:15:00Z",
-  },
-  {
-    id: 5,
-    nivel: "critico",
-    regra: "Conta bloqueada por atividade fraudulenta",
-    usuario: "Carlos Souza",
-    valores: { saque: 120000, limite: 5000 },
-    timestamp: "2026-06-24T08:00:00Z",
-  },
-  {
-    id: 6,
-    nivel: "alto",
-    regra: "Transferência para conta sinalizada",
-    usuario: "Fernanda Lima",
-    valores: { valor: 45000 },
-    timestamp: "2026-06-24T07:30:00Z",
-  },
-  {
-    id: 7,
-    nivel: "medio",
-    regra: "Login de localização incomum",
-    usuario: "Ricardo Alves",
-    valores: {},
-    timestamp: "2026-06-24T07:00:00Z",
-  },
-  {
-    id: 8,
-    nivel: "critico",
-    regra: "Volume anormal de saques em 1 hora",
-    usuario: "Juliana Rocha",
-    valores: { saque: 95000, limite: 20000 },
-    timestamp: "2026-06-24T06:45:00Z",
-  },
-  {
-    id: 9,
-    nivel: "baixo",
-    regra: "Atualização de perfil de risco",
-    usuario: "Gabriel Martins",
-    valores: {},
-    timestamp: "2026-06-24T06:30:00Z",
-  },
-  {
-    id: 10,
-    nivel: "medio",
-    regra: "Tentativa de saque sem saldo",
-    usuario: "Lucia Ferreira",
-    valores: { saque: 5000, saldo: 1200 },
-    timestamp: "2026-06-24T06:00:00Z",
-  },
-]
-
-const MOCK_RANKINGS: RankingsData = {
-  top_depositantes: [
-    { name: "Maria Santos", value: 250000, alertLevel: "baixo" },
-    { name: "João Silva", value: 198500, alertLevel: "critico" },
-    { name: "Ana Oliveira", value: 175000, alertLevel: "baixo" },
-    { name: "Pedro Costa", value: 162300, alertLevel: "medio" },
-    { name: "Carlos Souza", value: 148900, alertLevel: "critico" },
-    { name: "Fernanda Lima", value: 135600, alertLevel: "alto" },
-    { name: "Ricardo Alves", value: 124700, alertLevel: "baixo" },
-    { name: "Juliana Rocha", value: 112400, alertLevel: "critico" },
-  ],
-  top_ganhadores: [
-    { name: "Gabriel Martins", value: 89200, alertLevel: "baixo" },
-    { name: "Lucia Ferreira", value: 67500, alertLevel: "medio" },
-    { name: "Rafael Dias", value: 54300 },
-    { name: "Camila Nunes", value: 48900, alertLevel: "baixo" },
-    { name: "Bruno Oliveira", value: 42100 },
-    { name: "Amanda Costa", value: 38700, alertLevel: "alto" },
-    { name: "Diego Santos", value: 35400 },
-    { name: "Patricia Lima", value: 32100, alertLevel: "baixo" },
-  ],
-  top_sacadores: [
-    { name: "João Silva", value: 50000, alertLevel: "critico" },
-    { name: "Juliana Rocha", value: 95000, alertLevel: "critico" },
-    { name: "Carlos Souza", value: 120000, alertLevel: "critico" },
-    { name: "Fernanda Lima", value: 45000, alertLevel: "alto" },
-    { name: "Lucia Ferreira", value: 5000, alertLevel: "medio" },
-    { name: "Pedro Costa", value: 15000, alertLevel: "medio" },
-    { name: "Rafael Dias", value: 8200 },
-    { name: "Amanda Costa", value: 6400 },
-  ],
-}
-
-const MOCK_RISK_CHART: RiskChartData[] = [
-  { nivel: "baixo", quantidade: 12 },
-  { nivel: "medio", quantidade: 8 },
-  { nivel: "alto", quantidade: 6 },
-  { nivel: "critico", quantidade: 5 },
-]
-
 type Tab = "depositantes" | "ganhadores" | "sacadores"
 
 const tabConfig: { key: Tab; label: string; dataKey: keyof RankingsData }[] = [
@@ -173,12 +42,61 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
-      await new Promise((r) => setTimeout(r, 600))
 
-      setStats(MOCK_STATS)
-      setAlerts(MOCK_ALERTS)
-      setRankings(MOCK_RANKINGS)
-      setRiskChart(MOCK_RISK_CHART)
+      try {
+        const [statsRes, alertsRes, rankingsRes, chartRes] = await Promise.all([
+          fetch("/api/stats").then((r) => r.json()),
+          fetch("/api/alerts").then((r) => r.json()),
+          fetch("/api/rankings").then((r) => r.json()),
+          fetch("/api/risk-chart").then((r) => r.json()),
+        ])
+
+        setStats({
+          total_usuarios: statsRes.total_usuarios ?? 0,
+          total_depositos_hoje: statsRes.total_depositos_hoje ?? 0,
+          total_saques_hoje: statsRes.total_saques_hoje ?? 0,
+          alertas_ativos: statsRes.alertas_ativos ?? 0,
+          alertas_criticos: statsRes.alertas_criticos ?? 0,
+        })
+
+        const alertList: AlertData[] = (alertsRes as Array<Record<string, unknown>>).map((a, i) => ({
+          id: i + 1,
+          nivel: (a.nivel as AlertData["nivel"]) ?? "baixo",
+          regra: String(a.descricao ?? ""),
+          usuario: String(a.usuario_id ?? ""),
+          timestamp: String(a.data ?? ""),
+          valores: (a.valores_relevantes as Record<string, number | undefined>) ?? {},
+        }))
+        setAlerts(alertList)
+
+        setRiskChart(
+          (chartRes.por_nivel as RiskChartData[]) ?? [
+            { nivel: "critico", quantidade: 0 },
+            { nivel: "alto", quantidade: 0 },
+            { nivel: "medio", quantidade: 0 },
+            { nivel: "baixo", quantidade: 0 },
+          ]
+        )
+
+        const r = rankingsRes as Record<string, Array<{ nome: string; total?: number; saldo?: number }>>
+        setRankings({
+          top_depositantes: (r.top_depositantes ?? []).map((d) => ({
+            name: d.nome,
+            value: d.total ?? 0,
+          })),
+          top_ganhadores: (r.top_ganhadores ?? []).map((g) => ({
+            name: g.nome,
+            value: g.saldo ?? 0,
+          })),
+          top_sacadores: (r.top_sacadores ?? []).map((s) => ({
+            name: s.nome,
+            value: s.total ?? 0,
+          })),
+        })
+      } catch {
+        // mantem estados vazios
+      }
+
       setLoading(false)
     }
 
@@ -221,6 +139,12 @@ export default function DashboardPage() {
                   className="rounded-xl border bg-card h-[88px] animate-pulse"
                 />
               ))
+            : alerts.length === 0
+            ? (
+                <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
+                  Nenhum alerta ativo no momento
+                </div>
+              )
             : alerts
                 .slice(0, 10)
                 .map((alert) => (
