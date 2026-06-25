@@ -321,11 +321,15 @@ export function runAllRules(
   const allAlerts: Alert[] = [
     ...ruleDepositosAcima200(transactions, users),
     ...ruleMultiplosDepositos(transactions, users),
-    ...ruleSaquePosDeposito(transactions, users),
+    // Regra 3 (Saque pos-deposito): desativada - requer rollover_cumprido (nao disponivel na view)
+    // ...ruleSaquePosDeposito(transactions, users),
     ...ruleGanhosAnormais(transactions, users),
-    ...ruleAbusoCupons(transactions, users),
-    ...ruleDispositivosCompartilhados(users),
-    ...ruleAlteracoesCadastrais(users),
+    // Regra 5 (Abuso de cupons): desativada - requer cupom_id (nao disponivel na view)
+    // ...ruleAbusoCupons(transactions, users),
+    // Regra 6 (Dispositivos compartilhados): desativada - requer dispositivo_id (nao disponivel na view)
+    // ...ruleDispositivosCompartilhados(users),
+    // Regra 7 (Alteracoes cadastrais): desativada - requer alteracoes_cadastrais (nao disponivel na view)
+    // ...ruleAlteracoesCadastrais(users),
   ].slice(0, 500);
 
   const activeAlertCounts = new Map<string, number>();

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import type { DashboardStats, User, Transaction } from "@/types"
+import type { DashboardStats } from "@/types"
 import { mockUsers, mockTransactions, mockAlerts } from "@/lib/mock-data"
 
 export async function GET(): Promise<NextResponse> {
@@ -7,13 +7,9 @@ export async function GET(): Promise<NextResponse> {
     let stats: DashboardStats | null = null
 
     try {
-      const { getUsers } = await import("@/lib/services/google-sheets")
-      const { getTransactions } = await import("@/lib/services/azure-sql")
+      const { getData } = await import("@/lib/services/azure-sql")
 
-      const [users, transactions] = await Promise.all([
-        getUsers().catch(() => [] as User[]),
-        getTransactions().catch(() => [] as Transaction[]),
-      ])
+      const { users, transactions } = await getData()
 
       const today = new Date().toISOString().slice(0, 10)
       const usuariosAtivos = users.filter((u) => u.status === "ativo")

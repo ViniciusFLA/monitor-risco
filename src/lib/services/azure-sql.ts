@@ -1,11 +1,13 @@
-import { Transaction } from '@/types';
+import { Transaction, User } from '@/types';
 
 interface TransactionFilters {
   usuario_id?: string;
-  tipo?: Transaction['tipo'];
+  tipo?: string;
   data_inicio?: string;
   data_fim?: string;
 }
+
+type RawRow = Record<string, unknown>;
 
 function getConnectionConfig() {
   const server = process.env.AZURE_SQL_SERVER;
@@ -17,300 +19,70 @@ function getConnectionConfig() {
   return { server, database, user, password };
 }
 
-function getMockTransactions(): Transaction[] {
-  return [
-    {
-      id: 't1',
-      usuario_id: 'u1',
-      tipo: 'deposito',
-      valor: 500,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't2',
-      usuario_id: 'u1',
-      tipo: 'deposito',
-      valor: 1200,
-      data: new Date().toISOString(),
-      rollover_cumprido: true,
-    },
-    {
-      id: 't3',
-      usuario_id: 'u2',
-      tipo: 'deposito',
-      valor: 350,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't4',
-      usuario_id: 'u2',
-      tipo: 'saque',
-      valor: 280,
-      data: new Date().toISOString(),
-      rollover_cumprido: true,
-    },
-    {
-      id: 't5',
-      usuario_id: 'u3',
-      tipo: 'deposito',
-      valor: 8000,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't6',
-      usuario_id: 'u3',
-      tipo: 'aposta',
-      valor: 500,
-      data: new Date(Date.now() - 3600000).toISOString(),
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't7',
-      usuario_id: 'u3',
-      tipo: 'deposito',
-      valor: 2000,
-      data: new Date(Date.now() - 7200000).toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't8',
-      usuario_id: 'u4',
-      tipo: 'deposito',
-      valor: 180,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't9',
-      usuario_id: 'u4',
-      tipo: 'saque',
-      valor: 2500,
-      data: new Date().toISOString(),
-      rollover_cumprido: true,
-    },
-    {
-      id: 't10',
-      usuario_id: 'u5',
-      tipo: 'deposito',
-      valor: 100,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't11',
-      usuario_id: 'u6',
-      tipo: 'deposito',
-      valor: 450,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't12',
-      usuario_id: 'u7',
-      tipo: 'deposito',
-      valor: 15000,
-      data: new Date().toISOString(),
-      rollover_cumprido: true,
-    },
-    {
-      id: 't13',
-      usuario_id: 'u7',
-      tipo: 'saque',
-      valor: 18000,
-      data: new Date().toISOString(),
-      rollover_cumprido: true,
-    },
-    {
-      id: 't14',
-      usuario_id: 'u8',
-      tipo: 'deposito',
-      valor: 300,
-      data: new Date(Date.now() - 3600000).toISOString(),
-      rollover_cumprido: false,
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't15',
-      usuario_id: 'u8',
-      tipo: 'deposito',
-      valor: 220,
-      data: new Date(Date.now() - 5400000).toISOString(),
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't16',
-      usuario_id: 'u1',
-      tipo: 'deposito',
-      valor: 300,
-      data: new Date(Date.now() - 1800000).toISOString(),
-      cupom_id: 'CUPOM50',
-    },
-    {
-      id: 't17',
-      usuario_id: 'u1',
-      tipo: 'deposito',
-      valor: 250,
-      data: new Date(Date.now() - 900000).toISOString(),
-      cupom_id: 'CUPOM50',
-    },
-    {
-      id: 't18',
-      usuario_id: 'u1',
-      tipo: 'deposito',
-      valor: 400,
-      data: new Date(Date.now() - 600000).toISOString(),
-      cupom_id: 'CUPOM50',
-    },
-    {
-      id: 't19',
-      usuario_id: 'u9',
-      tipo: 'deposito',
-      valor: 600,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't20',
-      usuario_id: 'u10',
-      tipo: 'deposito',
-      valor: 5000,
-      data: new Date().toISOString(),
-      rollover_cumprido: false,
-    },
-    {
-      id: 't21',
-      usuario_id: 'u3',
-      tipo: 'aposta',
-      valor: 1000,
-      data: new Date(Date.now() - 1800000).toISOString(),
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't22',
-      usuario_id: 'u3',
-      tipo: 'aposta',
-      valor: 1500,
-      data: new Date(Date.now() - 900000).toISOString(),
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't23',
-      usuario_id: 'u3',
-      tipo: 'aposta',
-      valor: 2000,
-      data: new Date(Date.now() - 600000).toISOString(),
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't24',
-      usuario_id: 'u1',
-      tipo: 'deposito',
-      valor: 200,
-      data: new Date(Date.now() - 2400000).toISOString(),
-      rollover_cumprido: true,
-    },
-    {
-      id: 't25',
-      usuario_id: 'u1',
-      tipo: 'saque',
-      valor: 2000,
-      data: new Date().toISOString(),
-      rollover_cumprido: true,
-    },
-    {
-      id: 't26',
-      usuario_id: 'u9',
-      tipo: 'deposito',
-      valor: 150,
-      data: new Date(Date.now() - 3600000).toISOString(),
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't27',
-      usuario_id: 'u9',
-      tipo: 'deposito',
-      valor: 350,
-      data: new Date(Date.now() - 7200000).toISOString(),
-      cupom_id: 'CUPOM10',
-    },
-    {
-      id: 't28',
-      usuario_id: 'u3',
-      tipo: 'deposito',
-      valor: 400,
-      data: new Date(Date.now() - 1800000).toISOString(),
-    },
-    {
-      id: 't29',
-      usuario_id: 'u3',
-      tipo: 'deposito',
-      valor: 350,
-      data: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      id: 't30',
-      usuario_id: 'u3',
-      tipo: 'deposito',
-      valor: 500,
-      data: new Date(Date.now() - 5400000).toISOString(),
-    },
-  ];
+function normalizeType(raw: string): Transaction['tipo'] {
+  switch (raw) {
+    case 'DEPOSIT':
+      return 'deposito';
+    case 'WITHDRAW':
+      return 'saque';
+    case 'BET':
+      return 'aposta';
+    case 'GAIN':
+      return 'ganho';
+    case 'BONUS':
+      return 'bonus';
+    case 'REFUND_CREDIT':
+      return 'estorno';
+    default:
+      return 'aposta';
+  }
 }
 
-function mapRowToTransaction(row: Record<string, unknown>): Transaction {
+function mapRowToTransaction(row: RawRow): Transaction {
   return {
-    id: String(row.id ?? row.ID ?? row.Id ?? ''),
-    usuario_id: String(row.usuario_id ?? row.UsuarioId ?? row.usuarioId ?? ''),
-    tipo: String(row.tipo ?? row.Tipo ?? 'deposito') as Transaction['tipo'],
-    valor: Number(row.valor ?? row.Valor ?? 0),
-    data: String(row.data ?? row.Data ?? new Date().toISOString()),
-    cupom_id: row.cupom_id != null ? String(row.cupom_id) : undefined,
-    rollover_cumprido: row.rollover_cumprido != null ? Boolean(row.rollover_cumprido) : undefined,
+    id: String(row.transactions_history_id ?? ''),
+    usuario_id: String(row.transactions_history_player_id ?? ''),
+    tipo: normalizeType(String(row.transactions_history_type ?? '')),
+    valor: Number(row.transactions_history_amount ?? 0),
+    data: row.transactions_history_created_at instanceof Date
+      ? row.transactions_history_created_at.toISOString()
+      : String(row.transactions_history_created_at ?? new Date().toISOString()),
   };
 }
 
-export async function getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
-  const config = getConnectionConfig();
+function extractUsers(rows: RawRow[]): User[] {
+  const userMap = new Map<string, User>();
 
-  if (!config) {
-    const mockData = getMockTransactions();
-    if (!filters) return mockData;
+  for (const row of rows) {
+    const id = String(row.transactions_history_player_id ?? '');
+    if (!id || userMap.has(id)) continue;
 
-    return mockData.filter((t) => {
-      if (filters.usuario_id && t.usuario_id !== filters.usuario_id) return false;
-      if (filters.tipo && t.tipo !== filters.tipo) return false;
-      if (filters.data_inicio && t.data < filters.data_inicio) return false;
-      if (filters.data_fim && t.data > filters.data_fim) return false;
-      return true;
+    userMap.set(id, {
+      id,
+      nome: String(row.transactions_history_player_name ?? ''),
+      email: '',
+      telefone: '',
+      documento: String(row.transactions_history_player_cpf ?? ''),
+      dispositivo_id: '',
+      ip_ultimo_acesso: '',
+      data_cadastro: '',
+      status: 'ativo',
+      alteracoes_cadastrais: 0,
     });
   }
 
+  return Array.from(userMap.values());
+}
+
+async function queryAzure(filters?: TransactionFilters): Promise<{ transactions: Transaction[]; users: User[] }> {
+  const config = getConnectionConfig();
+  if (!config) {
+    return { transactions: [], users: [] };
+  }
+
+  const sql = await import('mssql');
+
   try {
-    const sql = await import('mssql');
-
-    let query = 'SELECT * FROM Transacoes WHERE 1=1';
-    const params: { name: string; value: unknown }[] = [];
-
-    if (filters?.usuario_id) {
-      query += ' AND usuario_id = @usuarioId';
-      params.push({ name: 'usuarioId', value: filters.usuario_id });
-    }
-    if (filters?.tipo) {
-      query += ' AND tipo = @tipo';
-      params.push({ name: 'tipo', value: filters.tipo });
-    }
-    if (filters?.data_inicio) {
-      query += ' AND data >= @dataInicio';
-      params.push({ name: 'dataInicio', value: filters.data_inicio });
-    }
-    if (filters?.data_fim) {
-      query += ' AND data <= @dataFim';
-      params.push({ name: 'dataFim', value: filters.data_fim });
-    }
-
     const pool = await sql.connect({
       server: config.server,
       database: config.database,
@@ -319,17 +91,67 @@ export async function getTransactions(filters?: TransactionFilters): Promise<Tra
       options: { encrypt: true, trustServerCertificate: false },
     });
 
+    const today = new Date().toISOString().slice(0, 10);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    const dataInicio = filters?.data_inicio ?? thirtyDaysAgo;
+    const dataFim = filters?.data_fim ?? today;
+
     const request = pool.request();
-    for (const p of params) {
-      request.input(p.name, p.value);
+    request.input('DataInicio', dataInicio);
+    request.input('DataFim', dataFim);
+
+    let query = 'SELECT * FROM fn_RelatorioTransacoes(@DataInicio, @DataFim)';
+
+    const conditions: string[] = [];
+
+    if (filters?.usuario_id) {
+      conditions.push('transactions_history_player_id = @UsuarioId');
+      request.input('UsuarioId', filters.usuario_id);
+    }
+
+    if (filters?.tipo) {
+      const tipoMap: Record<string, string> = {
+        deposito: 'DEPOSIT',
+        saque: 'WITHDRAW',
+        aposta: 'BET',
+        ganho: 'GAIN',
+        bonus: 'BONUS',
+        estorno: 'REFUND_CREDIT',
+      };
+      const realTipo = tipoMap[filters.tipo] ?? filters.tipo.toUpperCase();
+      conditions.push('transactions_history_type = @Tipo');
+      request.input('Tipo', realTipo);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
     }
 
     const result = await request.query(query);
-    return result.recordset.map(mapRowToTransaction);
+    const rows = result.recordset as RawRow[];
+    const transactions = rows.map(mapRowToTransaction);
+    const users = extractUsers(rows);
+
+    return { transactions, users };
   } catch (error) {
-    console.error('Erro ao buscar transacoes do Azure SQL:', error);
-    return [];
+    console.error('Erro ao buscar dados do Azure SQL:', error);
+    return { transactions: [], users: [] };
   }
+}
+
+export async function getData(filters?: TransactionFilters): Promise<{ users: User[]; transactions: Transaction[] }> {
+  return queryAzure(filters);
+}
+
+export async function getUsers(): Promise<User[]> {
+  const { users } = await queryAzure();
+  return users;
+}
+
+export async function getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
+  const { transactions } = await queryAzure(filters);
+  return transactions;
 }
 
 export async function getTransactionsByUser(usuarioId: string): Promise<Transaction[]> {

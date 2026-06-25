@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import type { Alert, AlertLevel, User, Transaction } from "@/types"
+import type { Alert, AlertLevel } from "@/types"
 import { mockAlerts } from "@/lib/mock-data"
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -11,13 +11,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     let alerts: Alert[] = []
 
     try {
-      const { getUsers } = await import("@/lib/services/google-sheets")
-      const { getTransactions } = await import("@/lib/services/azure-sql")
+      const { getData } = await import("@/lib/services/azure-sql")
 
-      const [users, transactions] = await Promise.all([
-        getUsers().catch(() => [] as User[]),
-        getTransactions().catch(() => [] as Transaction[]),
-      ])
+      const { users, transactions } = await getData()
 
       const { runAllRules } = await import("@/lib/engine/rules")
       const result = runAllRules(users, transactions)

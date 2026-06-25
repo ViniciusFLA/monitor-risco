@@ -16,7 +16,7 @@ export interface User {
 export interface Transaction {
   id: string;
   usuario_id: string;
-  tipo: 'deposito' | 'saque' | 'aposta';
+  tipo: 'deposito' | 'saque' | 'aposta' | 'ganho' | 'bonus' | 'estorno';
   valor: number;
   data: string;
   cupom_id?: string;

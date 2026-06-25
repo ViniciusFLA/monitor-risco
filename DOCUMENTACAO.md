@@ -29,12 +29,13 @@ Sistema de monitoramento automático por IA para identificar comportamentos susp
   | created_at | data_cadastro |
   | status | status (ACTIVE→ativo) |
 
-### 2. Azure SQL Server (Transações) — PENDENTE
+### 2. Azure SQL Server (Transacoes) — CONECTADO
 - **Server:** `prod-wallet-server.database.windows.net`
-- **Database:** `wallet-api-database`
-- **Usuário:** `analista_dados`
+- **Database:** `prod-wallet-api-database`
+- **Usuario:** `analista_dados`
 - **Senha:** `A@n@list@Vinicius!`
-- **Status:** Firewall bloqueando acesso. Precisa liberar.
+- **View:** `fn_RelatorioTransacoes(@DataInicio, @DataFim)`
+- **Status:** Conectado. 102 usuarios, ~130k transacoes/mes.
 
 ---
 
@@ -82,20 +83,20 @@ vercel --prod --yes
 
 ---
 
-## Regras de Monitoramento (8 Regras)
+## Regras de Monitoramento (4 Ativas, 4 Pendentes)
 
-| # | Regra | Gatilho | Nível |
-|---|-------|---------|-------|
-| 1 | Depósitos > R$200 | Valor > R$200 | Baixo (200-1000) / Médio (>1000) |
-| 2 | Múltiplos depósitos | >5 depósitos em 24h | Médio |
-| 3 | Saque pós-depósito | Saque logo após rollover | Alto |
-| 4 | Ganhos anormais | Crescimento >2.5x média | Alto |
-| 5 | Abuso de cupons | Mesmo cupom >2x por usuário | Médio |
-| 6 | Dispositivos compartilhados | Múltiplas contas mesmo device_id | Crítico |
-| 7 | Alterações cadastrais | >3 mudanças de dados | Médio |
-| 8 | Ranking diário | Top 20 depositantes/ganhadores/sacadores | — |
+| # | Regra | Gatilho | Nivel | Status |
+|---|-------|---------|-------|--------|
+| 1 | Depositos > R$200 | Valor > R$200 | Baixo (200-1000) / Medio (>1000) | Ativa |
+| 2 | Multiplos depositos | >5 depositos em 24h | Medio | Ativa |
+| 3 | Saque pos-deposito | Saque logo apos rollover | Alto | Pendente (sem rollover_cumprido) |
+| 4 | Ganhos anormais | Crescimento >2.5x media | Alto | Ativa |
+| 5 | Abuso de cupons | Mesmo cupom >2x por usuario | Medio | Pendente (sem cupom_id) |
+| 6 | Dispositivos compartilhados | Multiplas contas mesmo device_id | Critico | Pendente (sem dispositivo_id) |
+| 7 | Alteracoes cadastrais | >3 mudancas de dados | Medio | Pendente (sem alteracoes_cadastrais) |
+| 8 | Ranking diario | Top 20 depositantes/ganhadores/sacadores | — | Ativa |
 
-**Níveis:** Baixo → Médio → Alto → Crítico
+**Niveis:** Baixo → Medio → Alto → Critico
 
 ---
 
@@ -143,7 +144,7 @@ Já configuradas em produção:
 | GOOGLE_SHEET_ID | 1jGA297iefjWFTLbXZxrhsNAugjGjQLNuXXjIFzPVB10 |
 | GOOGLE_SHEET_GID | 1463888907 |
 | AZURE_SQL_SERVER | prod-wallet-server.database.windows.net |
-| AZURE_SQL_DATABASE | wallet-api-database |
+| AZURE_SQL_DATABASE | prod-wallet-api-database |
 | AZURE_SQL_USER | analista_dados |
 | AZURE_SQL_PASSWORD | A@n@list@Vinicius! |
 
@@ -162,19 +163,19 @@ vercel --prod --yes  # Deploy produção
 
 ---
 
-## Estado Atual (24/06/2026)
+## Estado Atual (25/06/2026)
 
 | Componente | Status |
 |-----------|--------|
-| Google Sheets | ✅ Conectado — 316 usuários |
-| Azure SQL | ❌ Firewall bloqueando |
-| Motor de Regras | ✅ Pronto e calibrado |
-| API Endpoints | ✅ 4 rotas funcionando |
-| Dashboard | ✅ No ar com dados mock |
-| Deploy Vercel | ✅ https://monitor-risco.vercel.app |
+| Google Sheets | Removido (substituido pelo Azure) |
+| Azure SQL | Conectado — view fn_RelatorioTransacoes |
+| Motor de Regras | 4 regras ativas, 4 pendentes |
+| API Endpoints | 4 rotas funcionando com dados reais |
+| Dashboard | No ar com dados do Azure |
+| Deploy Vercel | https://monitor-risco.vercel.app |
 
 ---
 
-## Próximo Passo
+## Proximo Passo
 
-Conectar no Azure SQL do trabalho (IP liberado), descobrir as tabelas de transação e mapear as colunas reais em `src/lib/services/azure-sql.ts`.
+Atualizar env var `AZURE_SQL_DATABASE=prod-wallet-api-database` no Vercel.

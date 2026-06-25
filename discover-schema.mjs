@@ -5,7 +5,7 @@ import sql from 'mssql';
 
 const config = {
   server: 'prod-wallet-server.database.windows.net',
-  database: 'wallet-api-database',
+  database: 'prod-wallet-api-database',
   user: 'analista_dados',
   password: 'A@n@list@Vinicius!',
   options: {
