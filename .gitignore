@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# playwright
+playwright-report/
+test-results/
+
+# env (local only)
+.env*.local
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
