@@ -1,4 +1,6 @@
 import { Transaction, User } from '@/types';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 interface TransactionFilters {
   usuario_id?: string;
@@ -8,6 +10,23 @@ interface TransactionFilters {
 }
 
 type RawRow = Record<string, unknown>;
+
+interface StaticExport {
+  users: User[];
+  transactions: Transaction[];
+  exportado_em: string;
+}
+
+function getStaticData(): { users: User[]; transactions: Transaction[] } | null {
+  try {
+    const path = join(process.cwd(), 'src/lib/data/azure-export.json');
+    const raw = readFileSync(path, 'utf-8');
+    const data = JSON.parse(raw) as StaticExport;
+    return { users: data.users, transactions: data.transactions };
+  } catch {
+    return null;
+  }
+}
 
 function getConnectionConfig() {
   const server = process.env.AZURE_SQL_SERVER;
@@ -141,7 +160,34 @@ async function queryAzure(filters?: TransactionFilters): Promise<{ transactions:
 }
 
 export async function getData(filters?: TransactionFilters): Promise<{ users: User[]; transactions: Transaction[] }> {
-  return queryAzure(filters);
+  const result = await queryAzure(filters);
+  if (result.transactions.length > 0) return result;
+
+  const staticData = getStaticData();
+  if (staticData) {
+    console.log('Usando dados estaticos exportados (fallback)');
+    let { users, transactions } = staticData;
+
+    if (filters?.usuario_id) {
+      transactions = transactions.filter(t => t.usuario_id === filters.usuario_id);
+    }
+    if (filters?.tipo) {
+      transactions = transactions.filter(t => t.tipo === filters.tipo);
+    }
+    if (filters?.data_inicio) {
+      transactions = transactions.filter(t => t.data >= filters.data_inicio!);
+    }
+    if (filters?.data_fim) {
+      transactions = transactions.filter(t => t.data <= filters.data_fim!);
+    }
+
+    const userIds = new Set(transactions.map(t => t.usuario_id));
+    users = users.filter(u => userIds.has(u.id));
+
+    return { users, transactions };
+  }
+
+  return result;
 }
 
 export async function getUsers(): Promise<User[]> {
