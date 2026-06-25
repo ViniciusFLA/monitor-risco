@@ -2,14 +2,18 @@ import { NextResponse } from "next/server"
 import type { DashboardStats } from "@/types"
 import { mockUsers, mockTransactions, mockAlerts } from "@/lib/mock-data"
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
   try {
+    const { searchParams } = new URL(request.url)
+    const data_inicio = searchParams.get("data_inicio") ?? undefined
+    const data_fim = searchParams.get("data_fim") ?? undefined
+
     let stats: DashboardStats | null = null
 
     try {
       const { getData } = await import("@/lib/services/azure-sql")
 
-      const { users, transactions } = await getData()
+      const { users, transactions } = await getData({ data_inicio, data_fim })
 
       if (users.length === 0 && transactions.length === 0) {
         stats = {
@@ -24,13 +28,12 @@ export async function GET(): Promise<NextResponse> {
           alertas_criticos: mockAlerts.filter((a) => a.nivel === "critico").length,
         }
       } else {
-        const today = new Date().toISOString().slice(0, 10)
         const usuariosAtivos = users.filter((u) => u.status === "ativo")
         const depositosHoje = transactions
-          .filter((t) => t.tipo === "deposito" && t.data.startsWith(today))
+          .filter((t) => t.tipo === "deposito")
           .reduce((sum, t) => sum + t.valor, 0)
         const saquesHoje = transactions
-          .filter((t) => t.tipo === "saque" && t.data.startsWith(today))
+          .filter((t) => t.tipo === "saque")
           .reduce((sum, t) => sum + t.valor, 0)
 
         const { runAllRules } = await import("@/lib/engine/rules")

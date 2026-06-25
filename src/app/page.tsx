@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { RiskChart } from "@/components/dashboard/risk-chart"
 import { AlertCard } from "@/components/dashboard/alert-card"
@@ -31,7 +31,18 @@ const tabConfig: { key: Tab; label: string; dataKey: keyof RankingsData }[] = [
   { key: "sacadores", label: "Sacadores", dataKey: "top_sacadores" },
 ]
 
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function daysAgoStr(days: number): string {
+  const d = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  return d.toISOString().slice(0, 10)
+}
+
 export default function DashboardPage() {
+  const [dataInicio, setDataInicio] = useState(daysAgoStr(30))
+  const [dataFim, setDataFim] = useState(todayStr())
   const [stats, setStats] = useState<StatsData | null>(null)
   const [alerts, setAlerts] = useState<AlertData[]>([])
   const [rankings, setRankings] = useState<RankingsData | null>(null)
@@ -39,78 +50,110 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>("depositantes")
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
+  const loadData = useCallback(async (inicio: string, fim: string) => {
+    setLoading(true)
 
-      try {
-        const [statsRes, alertsRes, rankingsRes, chartRes] = await Promise.all([
-          fetch("/api/stats").then((r) => r.json()),
-          fetch("/api/alerts").then((r) => r.json()),
-          fetch("/api/rankings").then((r) => r.json()),
-          fetch("/api/risk-chart").then((r) => r.json()),
-        ])
+    const params = new URLSearchParams()
+    if (inicio) params.set("data_inicio", inicio)
+    if (fim) params.set("data_fim", fim)
+    const qs = params.toString()
+    const suffix = qs ? `?${qs}` : ""
 
-        setStats({
-          total_usuarios: statsRes.total_usuarios ?? 0,
-          total_depositos_hoje: statsRes.total_depositos_hoje ?? 0,
-          total_saques_hoje: statsRes.total_saques_hoje ?? 0,
-          alertas_ativos: statsRes.alertas_ativos ?? 0,
-          alertas_criticos: statsRes.alertas_criticos ?? 0,
-        })
+    try {
+      const [statsRes, alertsRes, rankingsRes, chartRes] = await Promise.all([
+        fetch(`/api/stats${suffix}`).then((r) => r.json()),
+        fetch(`/api/alerts${suffix}`).then((r) => r.json()),
+        fetch(`/api/rankings${suffix}`).then((r) => r.json()),
+        fetch(`/api/risk-chart${suffix}`).then((r) => r.json()),
+      ])
 
-        const alertList: AlertData[] = (alertsRes as Array<Record<string, unknown>>).map((a, i) => ({
-          id: i + 1,
-          nivel: (a.nivel as AlertData["nivel"]) ?? "baixo",
-          regra: String(a.descricao ?? ""),
-          usuario: String(a.usuario_id ?? ""),
-          timestamp: String(a.data ?? ""),
-          valores: (a.valores_relevantes as Record<string, number | undefined>) ?? {},
-        }))
-        setAlerts(alertList)
+      setStats({
+        total_usuarios: statsRes.total_usuarios ?? 0,
+        total_depositos_hoje: statsRes.total_depositos_hoje ?? 0,
+        total_saques_hoje: statsRes.total_saques_hoje ?? 0,
+        alertas_ativos: statsRes.alertas_ativos ?? 0,
+        alertas_criticos: statsRes.alertas_criticos ?? 0,
+      })
 
-        setRiskChart(
-          (chartRes.por_nivel as RiskChartData[]) ?? [
-            { nivel: "critico", quantidade: 0 },
-            { nivel: "alto", quantidade: 0 },
-            { nivel: "medio", quantidade: 0 },
-            { nivel: "baixo", quantidade: 0 },
-          ]
-        )
+      const alertList: AlertData[] = (alertsRes as Array<Record<string, unknown>>).map((a, i) => ({
+        id: i + 1,
+        nivel: (a.nivel as AlertData["nivel"]) ?? "baixo",
+        regra: String(a.descricao ?? ""),
+        usuario: String(a.usuario_id ?? ""),
+        timestamp: String(a.data ?? ""),
+        valores: (a.valores_relevantes as Record<string, number | undefined>) ?? {},
+      }))
+      setAlerts(alertList)
 
-        const r = rankingsRes as Record<string, Array<{ nome: string; total?: number; saldo?: number }>>
-        setRankings({
-          top_depositantes: (r.top_depositantes ?? []).map((d) => ({
-            name: d.nome,
-            value: d.total ?? 0,
-          })),
-          top_ganhadores: (r.top_ganhadores ?? []).map((g) => ({
-            name: g.nome,
-            value: g.saldo ?? 0,
-          })),
-          top_sacadores: (r.top_sacadores ?? []).map((s) => ({
-            name: s.nome,
-            value: s.total ?? 0,
-          })),
-        })
-      } catch {
-        // mantem estados vazios
-      }
+      setRiskChart(
+        (chartRes.por_nivel as RiskChartData[]) ?? [
+          { nivel: "critico", quantidade: 0 },
+          { nivel: "alto", quantidade: 0 },
+          { nivel: "medio", quantidade: 0 },
+          { nivel: "baixo", quantidade: 0 },
+        ]
+      )
 
-      setLoading(false)
+      const r = rankingsRes as Record<string, Array<{ nome: string; total?: number; saldo?: number }>>
+      setRankings({
+        top_depositantes: (r.top_depositantes ?? []).map((d) => ({
+          name: d.nome,
+          value: d.total ?? 0,
+        })),
+        top_ganhadores: (r.top_ganhadores ?? []).map((g) => ({
+          name: g.nome,
+          value: g.saldo ?? 0,
+        })),
+        top_sacadores: (r.top_sacadores ?? []).map((s) => ({
+          name: s.nome,
+          value: s.total ?? 0,
+        })),
+      })
+    } catch {
+      // mantem estados vazios
     }
 
-    loadData()
+    setLoading(false)
   }, [])
+
+  useEffect(() => {
+    loadData(dataInicio, dataFim)
+  }, [dataInicio, dataFim, loadData])
+
+  const handleApplyFilter = () => {
+    loadData(dataInicio, dataFim)
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Monitoramento de risco operacional em tempo real
           </p>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm">
+          <input
+            type="date"
+            value={dataInicio}
+            onChange={(e) => setDataInicio(e.target.value)}
+            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+          />
+          <span className="text-muted-foreground">ate</span>
+          <input
+            type="date"
+            value={dataFim}
+            onChange={(e) => setDataFim(e.target.value)}
+            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+          />
+          <button
+            onClick={handleApplyFilter}
+            className="rounded-md bg-primary text-primary-foreground px-4 py-1.5 text-sm font-medium hover:bg-primary/90"
+          >
+            Filtrar
+          </button>
         </div>
       </div>
 

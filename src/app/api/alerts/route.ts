@@ -7,13 +7,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const { searchParams } = request.nextUrl
     const nivel = searchParams.get("nivel") as AlertLevel | null
     const usuario_id = searchParams.get("usuario_id")
+    const data_inicio = searchParams.get("data_inicio") ?? undefined
+    const data_fim = searchParams.get("data_fim") ?? undefined
 
     let alerts: Alert[] = []
 
     try {
       const { getData } = await import("@/lib/services/azure-sql")
 
-      const { users, transactions } = await getData()
+      const { users, transactions } = await getData({ data_inicio, data_fim })
 
       if (users.length === 0 && transactions.length === 0) {
         alerts = mockAlerts

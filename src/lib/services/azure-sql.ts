@@ -175,10 +175,10 @@ export async function getData(filters?: TransactionFilters): Promise<{ users: Us
       transactions = transactions.filter(t => t.tipo === filters.tipo);
     }
     if (filters?.data_inicio) {
-      transactions = transactions.filter(t => t.data >= filters.data_inicio!);
+      transactions = transactions.filter(t => t.data.slice(0, 10) >= filters.data_inicio!);
     }
     if (filters?.data_fim) {
-      transactions = transactions.filter(t => t.data <= filters.data_fim!);
+      transactions = transactions.filter(t => t.data.slice(0, 10) <= filters.data_fim!);
     }
 
     const userIds = new Set(transactions.map(t => t.usuario_id));

@@ -64,12 +64,9 @@ async function main() {
   await sql.connect(config);
   console.log('Conectado!');
 
-  const today = new Date().toISOString().slice(0, 10);
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-  console.log(`Buscando dados de ${thirtyDaysAgo} ate ${today}...`);
+  console.log('Buscando dados do periodo completo...');
   const result = await sql.query(
-    `SELECT * FROM fn_RelatorioTransacoes('${thirtyDaysAgo}', '${today}') WHERE transactions_history_type IN ('DEPOSIT','WITHDRAW')`
+    `SELECT * FROM fn_RelatorioTransacoes('2020-01-01', '2030-12-31') WHERE transactions_history_type IN ('DEPOSIT','WITHDRAW')`
   );
 
   const rows = result.recordset;

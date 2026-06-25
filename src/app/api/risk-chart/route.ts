@@ -2,14 +2,18 @@ import { NextResponse } from "next/server"
 import type { ChartData } from "@/types"
 import { mockChartData } from "@/lib/mock-data"
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
   try {
+    const { searchParams } = new URL(request.url)
+    const data_inicio = searchParams.get("data_inicio") ?? undefined
+    const data_fim = searchParams.get("data_fim") ?? undefined
+
     let chartData: ChartData | null = null
 
     try {
       const { getData } = await import("@/lib/services/azure-sql")
 
-      const { users, transactions } = await getData()
+      const { users, transactions } = await getData({ data_inicio, data_fim })
 
       if (users.length === 0 && transactions.length === 0) {
         chartData = mockChartData
