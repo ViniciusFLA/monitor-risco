@@ -11,11 +11,13 @@ export async function GET(): Promise<NextResponse> {
 
       const { users, transactions } = await getData()
 
-      const { runAllRules } = await import("@/lib/engine/rules")
-      const result = runAllRules(users, transactions)
-      const alerts = result.alerts
+      if (users.length === 0 && transactions.length === 0) {
+        chartData = mockChartData
+      } else {
+        const { runAllRules } = await import("@/lib/engine/rules")
+        const result = runAllRules(users, transactions)
+        const alerts = result.alerts
 
-      if (alerts.length > 0) {
         const aggregated: Record<string, number> = {}
         for (const alert of alerts) {
           aggregated[alert.nivel] = (aggregated[alert.nivel] ?? 0) + 1
@@ -31,10 +33,6 @@ export async function GET(): Promise<NextResponse> {
         }
       }
     } catch {
-      chartData = mockChartData
-    }
-
-    if (!chartData) {
       chartData = mockChartData
     }
 

@@ -11,14 +11,14 @@ export async function GET(): Promise<NextResponse> {
 
       const { users, transactions } = await getData()
 
-      const { runAllRules } = await import("@/lib/engine/rules")
-      const result = runAllRules(users, transactions)
-      ranking = result.ranking
+      if (users.length === 0 && transactions.length === 0) {
+        ranking = mockDailyRanking
+      } else {
+        const { runAllRules } = await import("@/lib/engine/rules")
+        const result = runAllRules(users, transactions)
+        ranking = result.ranking
+      }
     } catch {
-      ranking = mockDailyRanking
-    }
-
-    if (!ranking || (ranking.top_depositantes.length === 0 && ranking.top_sacadores.length === 0)) {
       ranking = mockDailyRanking
     }
 

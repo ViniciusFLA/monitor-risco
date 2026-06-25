@@ -15,14 +15,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
       const { users, transactions } = await getData()
 
-      const { runAllRules } = await import("@/lib/engine/rules")
-      const result = runAllRules(users, transactions)
-      alerts = result.alerts
+      if (users.length === 0 && transactions.length === 0) {
+        alerts = mockAlerts
+      } else {
+        const { runAllRules } = await import("@/lib/engine/rules")
+        const result = runAllRules(users, transactions)
+        alerts = result.alerts
+      }
     } catch {
-      alerts = mockAlerts
-    }
-
-    if (alerts.length === 0) {
       alerts = mockAlerts
     }
 
