@@ -1,0 +1,43 @@
+╔══════════════════════════════════════════════════════╗
+║          MONITOR DE RISCO OPERACIONAL                ║
+║          Guia para o Amigo                           ║
+╚══════════════════════════════════════════════════════╝
+
+🔗 Site: https://monitor-risco.vercel.app
+
+📋 REQUISITOS:
+  - Windows
+  - Node.js (baixe em https://nodejs.org versao LTS)
+  - Estar na rede do escritorio (IP liberado no Azure SQL)
+  - Ser adicionado ao time do Vercel (peca ao Vinicius)
+
+🚀 PRIMEIRO USO (execute na ordem):
+
+  1. Extraia o ZIP para C:\monitor-risco
+  2. Execute setup.bat (duplo clique)
+     - Instala dependencias (~2 min)
+     - Configura Git
+     - Abre navegador para login no Vercel
+     - Vincula o projeto
+  3. Execute update.bat (duplo clique)
+     - Exporta dados do Azure SQL
+     - Publica no Vercel
+
+🔄 ATUALIZAR DADOS (diario/semanal):
+
+  Execute update.bat
+  Em 2 minutos o site esta atualizado.
+
+⚠️ IMPORTANTE:
+  - So funciona na rede do escritorio
+  - Se nao estiver no escritorio, o update.bat falha
+    mas o site continua funcionando com os ultimos dados
+  - Nao altere arquivos da pasta src\ manualmente
+  - Se o Vercel pedir login, execute setup.bat novamente
+
+📁 ARQUIVOS:
+  setup.bat          ← configuracao inicial (1 vez)
+  update.bat         ← atualiza dados (use sempre)
+  LEIA-ME.txt        ← este guia
+  scripts\           ← scripts internos
+  src\               ← codigo do sistema
