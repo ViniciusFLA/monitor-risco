@@ -21,17 +21,24 @@ function parseCSVRow(row: string[], headers: string[]): Record<string, string> {
   return obj;
 }
 
+function normalizeStatus(s: string): User['status'] {
+  const v = s.toLowerCase();
+  if (v === 'blocked' || v === 'bloqueado' || v === 'inactive') return 'bloqueado';
+  if (v === 'pending' || v === 'pendente') return 'pendente';
+  return 'ativo';
+}
+
 function mapRowToUser(obj: Record<string, string>): User {
   return {
-    id: obj.id ?? '',
+    id: obj.code ?? obj.id ?? '',
     nome: obj.nome ?? '',
     email: obj.email ?? '',
-    telefone: obj.telefone ?? '',
-    documento: obj.documento ?? obj.cpf ?? '',
-    dispositivo_id: obj.dispositivo_id ?? obj.dispositivoid ?? '',
+    telefone: obj.cellphone ?? obj.telefone ?? '',
+    documento: obj.cpf ?? obj.documento ?? '',
+    dispositivo_id: obj.device_id ?? obj.dispositivo_id ?? obj.dispositivoid ?? '',
     ip_ultimo_acesso: obj.ip_ultimo_acesso ?? obj.ip ?? '',
-    data_cadastro: obj.data_cadastro ?? obj.datacadastro ?? '',
-    status: (['ativo', 'bloqueado', 'pendente'].includes(obj.status?.toLowerCase() ?? '') ? obj.status.toLowerCase() : 'ativo') as User['status'],
+    data_cadastro: obj.created_at ?? obj.data_cadastro ?? obj.datacadastro ?? '',
+    status: normalizeStatus(obj.status ?? 'ativo'),
     alteracoes_cadastrais: parseInt(obj.alteracoes_cadastrais ?? obj.alteracoescadastrais ?? '0', 10),
   };
 }
