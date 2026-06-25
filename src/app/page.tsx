@@ -159,16 +159,24 @@ export default function DashboardPage() {
 
       <StatsCards data={stats} loading={loading} />
 
-      <div className="flex flex-wrap items-center gap-3 text-xs">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
         <span className="text-muted-foreground font-medium">Niveis de risco:</span>
-        <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-100 dark:bg-sky-900/30 px-2 py-0.5 text-sky-700 dark:text-sky-400 font-semibold">Baixo</span>
-        <span className="text-muted-foreground">= observe</span>
-        <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-amber-700 dark:text-amber-400 font-semibold">Medio</span>
-        <span className="text-muted-foreground">= investigue</span>
-        <span className="inline-flex items-center gap-1.5 rounded-md bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 text-orange-700 dark:text-orange-400 font-semibold">Alto</span>
-        <span className="text-muted-foreground">= aja</span>
-        <span className="inline-flex items-center gap-1.5 rounded-md bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-red-700 dark:text-red-400 font-semibold">Critico</span>
-        <span className="text-muted-foreground">= bloqueie</span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-md bg-sky-100 dark:bg-sky-900/30 px-2 py-0.5 text-sky-700 dark:text-sky-400 font-semibold cursor-help"
+          title="Comportamento atipico leve, monitorar&#10;Ex: Deposito de R$250 (pouco acima do limite)&#10;&#10;Dispara quando:&#10;- Depositos entre R$200 e R$1000"
+        >Baixo = observe</span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-md bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-amber-700 dark:text-amber-400 font-semibold cursor-help"
+          title="Padrao suspeito que merece atencao&#10;Ex: 6 depositos no mesmo dia, ou deposito >R$1000&#10;&#10;Dispara quando:&#10;- >5 depositos em 24h&#10;- Deposito acima de R$1000"
+        >Medio = investigue</span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-md bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 text-orange-700 dark:text-orange-400 font-semibold cursor-help"
+          title="Risco significativo, acao recomendada&#10;Ex: Saque suspeito, ganhos muito acima da media&#10;&#10;Dispara quando:&#10;- Saque logo apos rollover&#10;- Crescimento >2.5x a media da plataforma"
+        >Alto = aja</span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-md bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-red-700 dark:text-red-400 font-semibold cursor-help"
+          title="Fraude provavel, acao imediata necessaria&#10;Ex: Multiplas contas no mesmo dispositivo&#10;&#10;Dispara quando:&#10;- mais de 5 contas no mesmo device_id"
+        >Critico = bloqueie</span>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -20,9 +20,16 @@ interface RankingTableProps {
 
 const nivelLabels: Record<string, string> = {
   baixo: "Baixo",
-  medio: "Médio",
+  medio: "Medio",
   alto: "Alto",
-  critico: "Crítico",
+  critico: "Critico",
+}
+
+const nivelTooltips: Record<string, string> = {
+  baixo: "Baixo = observe\nAtipico leve, monitorar",
+  medio: "Medio = investigue\nPadrao suspeito, merece atencao",
+  alto: "Alto = aja\nRisco significativo, acao recomendada",
+  critico: "Critico = bloqueie\nFraude provavel, acao imediata",
 }
 
 const formatCurrency = (value: number) =>
@@ -91,7 +98,7 @@ export function RankingTable({ title, data, valueLabel }: RankingTableProps) {
                 </TableCell>
                 <TableCell>
                   {item.alertLevel ? (
-                    <Badge variant={item.alertLevel} className="text-[10px] px-1.5">
+                    <Badge variant={item.alertLevel} className="text-[10px] px-1.5 cursor-help" title={nivelTooltips[item.alertLevel] ?? ""}>
                       {nivelLabels[item.alertLevel]}
                     </Badge>
                   ) : (

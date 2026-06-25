@@ -28,9 +28,16 @@ interface AlertCardProps {
 
 const nivelLabels: Record<string, string> = {
   baixo: "Baixo",
-  medio: "Médio",
+  medio: "Medio",
   alto: "Alto",
-  critico: "Crítico",
+  critico: "Critico",
+}
+
+const nivelTooltips: Record<string, string> = {
+  baixo: "Baixo = observe\nAtipico leve, monitorar",
+  medio: "Medio = investigue\nPadrao suspeito, merece atencao",
+  alto: "Alto = aja\nRisco significativo, acao recomendada",
+  critico: "Critico = bloqueie\nFraude provavel, acao imediata",
 }
 
 const formatCurrency = (value: number) =>
@@ -56,7 +63,7 @@ export function AlertCard({ alert, onClick }: AlertCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5">
-              <Badge variant={alert.nivel}>{nivelLabel}</Badge>
+              <Badge variant={alert.nivel} title={nivelTooltips[alert.nivel] ?? ""}>{nivelLabel}</Badge>
               <span className="text-xs text-muted-foreground truncate">
                 {alert.regra}
               </span>
